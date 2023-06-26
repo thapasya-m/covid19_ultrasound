@@ -12,8 +12,9 @@ import pandas as pd
 import argparse
 
 CLASS_MAPPING = {
-    3: ['covid', 'pneumonia', 'regular'],
-    4: ['covid', 'pneumonia', 'regular', 'uninformative']
+    2: ['abnormal', 'normal'],
+    # 3: ['covid', 'pneumonia', 'regular'],
+    # 4: ['covid', 'pneumonia', 'regular', 'uninformative']
 }
 
 
@@ -132,12 +133,12 @@ def evaluate_3(saved_logits, saved_gt, saved_files, CLASSES, save_path):
 
 def main():
     parser = argparse.ArgumentParser(description='Evaluate cross validation')
-    parser.add_argument('--data', type=str, default="../data/cross_validation")
-    parser.add_argument('--weights', type=str, default='trained_models')
-    parser.add_argument('--m_id', type=str, default='vgg_base')
+    parser.add_argument('--data', type=str, default="../data/cross_validation_LUS_data")
+    parser.add_argument('--weights', type=str, default='models_LUS/vgg_cam')
+    parser.add_argument('--m_id', type=str, default='vgg_cam')
     parser.add_argument('--classes', type=int, default=4)
     parser.add_argument('--folds', type=int, default=5)
-    parser.add_argument('--save_path', type=str, default="results_vgg")
+    parser.add_argument('--save_path', type=str, default="results_vgg_26")
     args = parser.parse_args()
 
     saved_logits, saved_gt, saved_files = [], [], []
@@ -214,26 +215,27 @@ def main():
         # output the information
         predIdxs = np.argmax(logits, axis=1)
 
-        print(
-            classification_report(
-                gt_class_idx, predIdxs, target_names=CLASSES
-            )
-        )
+        # print(
+        #     classification_report(
+        #         gt_class_idx, predIdxs, target_names=CLASSES
+        #     )
+        # )
 
     with open(args.save_path + ".dat", "wb") as outfile:
         pickle.dump((saved_logits, saved_gt, saved_files), outfile)
 
+    print("saved the outputs")
     # EVALUATE
     evaluate_logits(
         saved_logits, saved_gt, saved_files, CLASSES, args.save_path
     )
 
     # EVALUATE ONLY 3 CLASSES
-    if len(CLASSES) == 4:
-        evaluate_3(
-            saved_logits, saved_gt, saved_files, CLASS_MAPPING[3],
-            args.save_path
-        )
+    # if len(CLASSES) == 4:
+    #     evaluate_3(
+    #         saved_logits, saved_gt, saved_files, CLASS_MAPPING[3],
+    #         args.save_path
+    #     )
 
 
 if __name__ == "__main__":

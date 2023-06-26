@@ -7,13 +7,14 @@ import warnings
 import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.preprocessing import LabelBinarizer
-from tensorflow.keras.callbacks import (
+from keras.callbacks import (
     EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 )
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.layers import Dense, GlobalAveragePooling3D
-from tensorflow.keras.losses import categorical_crossentropy
-from tensorflow.keras.models import Model
+from keras.optimizers import Adam
+from keras.layers import Dense, GlobalAveragePooling3D
+from keras.losses import categorical_crossentropy
+from keras.models import Model
+import keras.backend as K
 from pocovidnet.utils import fix_layers
 
 from pocovidnet import VIDEO_MODEL_FACTORY
@@ -37,19 +38,19 @@ def main():
     parser.add_argument(
         '--json', type=str, default="../data/cross_val.json"
     )
-    parser.add_argument('--output', type=str, default="video_model_outputs")
+    parser.add_argument('--output', type=str, default="models/video_model_outputs")
     parser.add_argument('--fold', type=int, default=0)
     parser.add_argument('--load', type=bool, default=False)
     parser.add_argument('--fr', type=int, default=5)
     parser.add_argument('--depth', type=int, default=5)
-    parser.add_argument('--model_id', type=str, default='genesis')
+    parser.add_argument('--model_id', type=str, default='base')
     parser.add_argument('--lr', type=float, default=1e-4)
     parser.add_argument('--trainable_base_layers', type=int, default=0)
     parser.add_argument(
         '--save', type=str, default='../data/video_input_data'
     )
     parser.add_argument(
-        '--weight_path', type=str, default='../Genesis_Chest_CT.h5'
+        '--weight_path', type=str, default='Genesis_Chest_CT.h5'
     )
 
     args = parser.parse_args()
@@ -180,17 +181,19 @@ def main():
     model.compile(
         optimizer=opt, loss=categorical_crossentropy, metrics=['accuracy']
     )
-    history = model.fit(
-        X_train,
-        Y_train,
-        validation_data=(X_test, Y_test),
-        batch_size=args.batch,
-        epochs=args.epoch,
-        verbose=1,
-        shuffle=True,
-        callbacks=[earlyStopping, mcp_save, reduce_lr_loss]
-    )
-    model.evaluate(X_test, Y_test, verbose=0)
+    # history = model.fit(
+    #     X_train,
+    #     Y_train,
+    #     validation_data=(X_test, Y_test),
+    #     batch_size=args.batch,
+    #     epochs=args.epoch,
+    #     verbose=1,
+    #     shuffle=True,
+    #     callbacks=[earlyStopping, mcp_save, reduce_lr_loss]
+    # )shape=(None, 64, 64, 1, 32)
+    nhwc_tensor = K.permute_dimensions(X_test, (0, 2, 3, 1, 4))
+    nhwc_tensor_1 = K.permute_dimensions(nhwc_tensor, (0, 3, 1, 2, 4))
+    model.evaluate(nhwc_tensor_1, Y_test, verbose=1)
     model_json = model.to_json()
     with open(
         os.path.join(
@@ -220,7 +223,7 @@ def main():
             Y_test.argmax(axis=1), predIdxs, target_names=lb.classes_
         )
     )
-    # compute the confusion matrix and and use it to derive the raw
+    # compute the confusion matrix and use it to derive the raw
     # accuracy, sensitivity, and specificity
     print('confusion matrix:')
     cm = confusion_matrix(Y_test.argmax(axis=1), predIdxs)

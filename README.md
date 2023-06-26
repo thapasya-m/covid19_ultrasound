@@ -4,119 +4,173 @@
 
 ## Summary
 
-### News
-This repo contains the code for the paper `Accelerating Detection of Lung Pathologies with Explainable Ultrasound Image Analysis` which is now [available](https://www.mdpi.com/2076-3417/11/2/672). Please [cite](#Citation) that one instead of our preprint.
-
 ### Goal
-This is an ongoing ultrasound data collection initiative for COVID-19. Please help growing the [database](data/README.md).
+The repository documents code required to process the data, train the VGG-based and its variant models and test the ultrasound image classifier to verify the performance.    
+
+[//]: # (This is an ongoing ultrasound data collection initiative for COVID-19. Please help growing the [database]&#40;data/README.md&#41;.)
 
 ### Dataset
-Feel free to use (and cite) our dataset. We currently have >200 LUS videos labelled with a diagnostic outcome. Moreover, lung severity scores for 136 videos are made available in the [dataset_metadata.csv](./data/dataset_metadata.csv) under the column **"Lung Severity Score"** from [Gare et al., 2022](https://arxiv.org/abs/2201.07357). Further clinical information (symptoms, visible LUS patterns etc) are provided for some videos. For details see [data/README.md](data/README.md).
+The dataset is curtsy of Dr. Marini of URMC and is currently proprietary. Hence, it is unavailable openly.
 
-**NOTE: Please make sure to create a meaningful train/test data split. Do not split the data on a frame-level, but on a video/patient-level. The task becomes trivial otherwise. See the instructions [here](pocovidnet/#cross-validation-splitting).**
+[//]: # (Feel free to use &#40;and cite&#41; our dataset. We currently have >200 LUS videos labelled with a diagnostic outcome. Moreover, lung severity scores for 136 videos are made available in the [dataset_metadata.csv]&#40;./data/dataset_metadata.csv&#41; under the column **"Lung Severity Score"** from [Gare et al., 2022]&#40;https://arxiv.org/abs/2201.07357&#41;. Further clinical information &#40;symptoms, visible LUS patterns etc&#41; are provided for some videos. For details see [data/README.md]&#40;data/README.md&#41;.)
 
-Please note: The founders/authors of the repository take no responsibility or liability for the data contributed to this archive. The contributing sites have to ensure that the collection and use of the data fulfills all applicable legal and ethical requirements.
+[//]: # ()
+[//]: # (**NOTE: Please make sure to create a meaningful train/test data split. Do not split the data on a frame-level, but on a video/patient-level. The task becomes trivial otherwise. See the instructions [here]&#40;pocovidnet/#cross-validation-splitting&#41;.**)
+
+[//]: # ()
+[//]: # (Please note: The founders/authors of the repository take no responsibility or liability for the data contributed to this archive. The contributing sites have to ensure that the collection and use of the data fulfills all applicable legal and ethical requirements.)
 
 
-## Contribution
-<p align="center">
-	<img src="pocovidnet/plots/overview.png" alt="photo not available" width="100%" height="100%">
-	<br>
-   <em>Overview figure about current efforts. Public dataset consists of >200 LUS videos.</em>
-</p>
+[//]: # (## Contribution)
+
+[//]: # (<p align="center">)
+
+[//]: # (	<img src="pocovidnet/plots/overview.png" alt="photo not available" width="100%" height="100%">)
+
+[//]: # (	<br>)
+
+[//]: # (   <em>Overview figure about current efforts. Public dataset consists of >200 LUS videos.</em>)
+
+[//]: # (</p>)
 
 ### Motivation:
-From the ML community, ultrasound has gained much less attention than CT and X-Ray in the context of COVID-19.
-But many voices from the medical community have advocated for a more prominent role of ultrasound in the current pandemic.
+healthcare has been increased in importance. Many patients hailing from developing countries have limited access to adequate health care. Using portable and more accessible option of using lung ultrasound(LUS) volume sweep imaging for initial test and prognosis is a potential solution
+
+[//]: # (From the ML community, ultrasound has gained much less attention than CT and X-Ray in the context of COVID-19.)
+
+[//]: # (But many voices from the medical community have advocated for a more prominent role of ultrasound in the current pandemic.)
 
 ### Summary
-We developed methods for the automatic detection of **COVID-19** 
-from **Lung Ultrasound** (LUS) recordings. Our results show that one can accurately distinguish LUS samples from COVID-19 patients from healthy controls and bacterial pneumonia. Our model is validated on an external dataset (ICLUS) where we achieve promising performance. The CAMs of the model were validated in a blinded study by US experts and found to highlight relevant pulmonary biomarkers.
-Using model uncertainty techniques, we can further boost model performance and find samples which are likely to be incorrectly classified.
-Our dataset complements the current data collection initiaves that only focus
-on CT or X-Ray data. 
+We developed methods for the automatic detection of **Pneumonia** 
+from **Lung Ultrasound** (LUS) recordings. Our results show that one can accurately distinguish LUS samples from patients with respitory illness from healthy controls. 
 
-#### Evidence for ultrasound
-Ultrasound is **non-invasive**, **cheap**, **portable** (bedside execution),
-**repeatable** and **available in almost all medical facilities**. But even for
-trained doctors detecting patterns of COVID-19 from ultrasound data is challenging and
-time-consuming. Since their time is scarce, there is an urgent need to simplify,
-fasten & automatize the detection of COVID-19.
-   - [LUS is more sensitive than X-Ray in diagnosing COVID-19](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7390587/) 
-   - [COVID-19 outbreak: less stethoscope, more ultrasound](https://www.thelancet.com/journals/lanres/article/PIIS2213-2600(20)30120-X/fulltext?fbclid=IwAR2kDbxpYTSjoj3Nl_B-nOhLZL66mQLUBVBCdzn6zEG5ObLKq9oXhPZDXHQ)
-   - Ultrasound can evidence the same symptoms as CT: ([Point-by-point correspondance of CT
-     and ultrasound findings through COVID-19 disease process](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7165267/)) 
+[//]: # (Our model is validated on an external dataset &#40;ICLUS&#41; where we achieve promising performance. The CAMs of the model were validated in a blinded study by US experts and found to highlight relevant pulmonary biomarkers.)
 
-#### Learn more about the project
-- [**Read our manuscript**](https://www.mdpi.com/2076-3417/11/2/672)
-- Read our [blogpost](https://towardsdatascience.com/ultrasound-for-covid-19-a-deep-learning-approach-f7906002892a)
-  
+[//]: # (Using model uncertainty techniques, we can further boost model performance and find samples which are likely to be incorrectly classified.)
+
+[//]: # (Our dataset complements the current data collection initiaves that only focus)
+
+[//]: # (on CT or X-Ray data. )
+
 ## Installation 
 
 ### Ultrasound data
-Find all details on the current state of the database in the [data](data)
-folder.
+As mentioned earlier the lung ultrasound images are not released for open source as of now.
+
+[//]: # (Find all details on the current state of the database in the [data]&#40;data&#41;)
+
+[//]: # (folder.)
 
 ### Deep learning model (`pocovidnet`)
 Find all details on how to reproduce our experiments and train your models on
 ultrasound data in the [pocovidnet](pocovidnet) folder.
 
-### Web interface (`pocovidscreen`)
-Find all details on how to get started in the [pocovidscreen](pocovidscreen)
-folder.
+[//]: # (### Web interface &#40;`pocovidscreen`&#41;)
 
-## Contact 
-- If you experience problems with the code, please open an
+[//]: # (Find all details on how to get started in the [pocovidscreen]&#40;pocovidscreen&#41;)
+
+[//]: # (folder.)
+
+## Disclaimer 
+- We are using the part of the method and open source code cited in [POCOVID-Net preprint](https://arxiv.org/abs/2004.12084)
+- In case of any problem with the code, please open an
 [issue](https://github.com/jannisborn/covid19_pocus_ultrasound/issues).
-- If you have questions about the project, please reach out: `jborn@ethz.ch`.
 
-# Citation
-An [abstract of our work was published](https://thorax.bmj.com/content/76/Suppl_1/A230.2) in *Thorax* as part of the BTS Winter Meeting 2021. 
-The full paper is available via the COVID-19 special issue of [Applied Sciences](https://www.mdpi.com/2076-3417/11/2/672).
-Please cite these in favor of our deprecated [POCOVID-Net preprint](https://arxiv.org/abs/2004.12084).
+[//]: # (- If you have questions about the project, please reach out: `jborn@ethz.ch`.)
 
-Please use the following bibtex entries:
-```bib
-@article{born2021accelerating,
-  title={Accelerating Detection of Lung Pathologies with Explainable Ultrasound Image Analysis}, 
-  author={Born, Jannis and Wiedemann, Nina and Cossio, Manuel and Buhre, Charlotte and Brändle, Gabriel and Leidermann, Konstantin and      Aujayeb, Avinash and Moor, Michael and Rieck, Bastian and Borgwardt, Karsten}, 
-  volume={11}, ISSN={2076-3417}, 
-  url={http://dx.doi.org/10.3390/app11020672}, 
-  DOI={10.3390/app11020672}, 
-  number={2}, 
-  journal={Applied Sciences}, 
-  publisher={MDPI AG}, 
-  year={2021}, 
-  month={Jan}, 
-  pages={672}
-}
+[//]: # (# Citation)
 
-@article {born2021l2,
-  author = {Born, J and Wiedemann, N and Cossio, M and Buhre, C and Br{\"a}ndle, G and Leidermann, K and Aujayeb, A},
-  title = {L2 Accelerating COVID-19 differential diagnosis with explainable ultrasound image analysis: an AI tool},
-  volume = {76},
-  number = {Suppl 1},
-  pages = {A230--A231},
-  year = {2021},
-  doi = {10.1136/thorax-2020-BTSabstracts.404},
-  publisher = {BMJ Publishing Group Ltd},
-  issn = {0040-6376},
-  URL = {https://thorax.bmj.com/content/76/Suppl_1/A230.2},
-  eprint = {https://thorax.bmj.com/content/76/Suppl_1/A230.2.full.pdf},
-  journal = {Thorax}
-}
-```
+[//]: # (An [abstract of our work was published]&#40;https://thorax.bmj.com/content/76/Suppl_1/A230.2&#41; in *Thorax* as part of the BTS Winter Meeting 2021. )
 
-If you use the severity scores, please cite the [Gare et al., 2022](https://arxiv.org/abs/2201.07357) paper using the following bibtex entry:
-```bib
-@article{Gare2022WeaklyUltrasound,
-    author = {Gare, Gautam Rajendrakumar and Tran, Hai V. and deBoisblanc, Bennett P and Rodriguez, Ricardo Luis and Galeotti, John Michael},
-    title = {{Weakly Supervised Contrastive Learning for Better Severity Scoring of Lung Ultrasound}},
-    year = {2022},
-    month = {1},
-    publisher = {arXiv},
-    url = {https://arxiv.org/abs/2201.07357},
-    doi = {10.48550/ARXIV.2201.07357},
-    arxivId = {2201.07357}
-}
-```
+[//]: # (The full paper is available via the COVID-19 special issue of [Applied Sciences]&#40;https://www.mdpi.com/2076-3417/11/2/672&#41;.)
+
+[//]: # (Please cite these in favor of our deprecated [POCOVID-Net preprint]&#40;https://arxiv.org/abs/2004.12084&#41;.)
+
+[//]: # ()
+[//]: # (Please use the following bibtex entries:)
+
+[//]: # (```bib)
+
+[//]: # (@article{born2021accelerating,)
+
+[//]: # (  title={Accelerating Detection of Lung Pathologies with Explainable Ultrasound Image Analysis}, )
+
+[//]: # (  author={Born, Jannis and Wiedemann, Nina and Cossio, Manuel and Buhre, Charlotte and Brändle, Gabriel and Leidermann, Konstantin and      Aujayeb, Avinash and Moor, Michael and Rieck, Bastian and Borgwardt, Karsten}, )
+
+[//]: # (  volume={11}, ISSN={2076-3417}, )
+
+[//]: # (  url={http://dx.doi.org/10.3390/app11020672}, )
+
+[//]: # (  DOI={10.3390/app11020672}, )
+
+[//]: # (  number={2}, )
+
+[//]: # (  journal={Applied Sciences}, )
+
+[//]: # (  publisher={MDPI AG}, )
+
+[//]: # (  year={2021}, )
+
+[//]: # (  month={Jan}, )
+
+[//]: # (  pages={672})
+
+[//]: # (})
+
+[//]: # ()
+[//]: # (@article {born2021l2,)
+
+[//]: # (  author = {Born, J and Wiedemann, N and Cossio, M and Buhre, C and Br{\"a}ndle, G and Leidermann, K and Aujayeb, A},)
+
+[//]: # (  title = {L2 Accelerating COVID-19 differential diagnosis with explainable ultrasound image analysis: an AI tool},)
+
+[//]: # (  volume = {76},)
+
+[//]: # (  number = {Suppl 1},)
+
+[//]: # (  pages = {A230--A231},)
+
+[//]: # (  year = {2021},)
+
+[//]: # (  doi = {10.1136/thorax-2020-BTSabstracts.404},)
+
+[//]: # (  publisher = {BMJ Publishing Group Ltd},)
+
+[//]: # (  issn = {0040-6376},)
+
+[//]: # (  URL = {https://thorax.bmj.com/content/76/Suppl_1/A230.2},)
+
+[//]: # (  eprint = {https://thorax.bmj.com/content/76/Suppl_1/A230.2.full.pdf},)
+
+[//]: # (  journal = {Thorax})
+
+[//]: # (})
+
+[//]: # (```)
+
+[//]: # ()
+[//]: # (If you use the severity scores, please cite the [Gare et al., 2022]&#40;https://arxiv.org/abs/2201.07357&#41; paper using the following bibtex entry:)
+
+[//]: # (```bib)
+
+[//]: # (@article{Gare2022WeaklyUltrasound,)
+
+[//]: # (    author = {Gare, Gautam Rajendrakumar and Tran, Hai V. and deBoisblanc, Bennett P and Rodriguez, Ricardo Luis and Galeotti, John Michael},)
+
+[//]: # (    title = {{Weakly Supervised Contrastive Learning for Better Severity Scoring of Lung Ultrasound}},)
+
+[//]: # (    year = {2022},)
+
+[//]: # (    month = {1},)
+
+[//]: # (    publisher = {arXiv},)
+
+[//]: # (    url = {https://arxiv.org/abs/2201.07357},)
+
+[//]: # (    doi = {10.48550/ARXIV.2201.07357},)
+
+[//]: # (    arxivId = {2201.07357})
+
+[//]: # (})
+
+[//]: # (```)

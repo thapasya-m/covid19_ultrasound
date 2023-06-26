@@ -13,21 +13,21 @@ ap.add_argument(
     "-d",
     "--data_dir",
     type=str,
-    default="../data/image_dataset",
+    default="../data/LUS_data_crop",
     help=("Raw data path. Expects 3 or 4 subfolders with classes")
 )
 ap.add_argument(
     "-o",
     "--output_dir",
     type=str,
-    default="../data/cross_validation/",
+    default="../data/cross_validation_LUS_data/",
     help=("Output path where images for cross validation will be stored.")
 )
 ap.add_argument(
     "-v",
     "--video_dir",
     type=str,
-    default="../data/pocus_videos/convex/",
+    default="../data/LUS_videos/",
     help=("Path where the videos of the database are stored")
 )
 ap.add_argument(
@@ -55,6 +55,7 @@ copy_dict = {}
 for classe in os.listdir(DATA_DIR):
     if classe[0] == ".":
         continue
+    print("what class: ", classe)
     # make directories:
     for split_ind in range(NUM_FOLDS):
         mod_path = os.path.join(OUTPUT_DIR, 'split' + str(split_ind), classe)
@@ -66,12 +67,12 @@ for classe in os.listdir(DATA_DIR):
     for in_file in os.listdir(os.path.join(DATA_DIR, classe)):
         if in_file[0] == ".":
             continue
-        if len(in_file.split(".")) == 3:
-            # this is a video
-            uni_videos.append(in_file.split(".")[0])
-        else:
+        # if len(in_file.split(".")) == 3:
+        #     # this is a video
+        #     uni_videos.append(in_file.split(".")[0])
+        # else:
             # this is an image
-            uni_images.append(in_file.split(".")[0])
+        uni_images.append(in_file.split(".")[0])
     # construct dict of file to fold mapping
     inner_dict = {}
     # consider images and videos separately
@@ -130,7 +131,7 @@ def check_crossval(cross_val_directory="../data/cross_validation"):
 
 
 # check whether all files are unique
-check_crossval()
+check_crossval(OUTPUT_DIR)
 
 # MAKE VIDEO CROSS VAL FILE --> corresponds to json cross val
 
@@ -156,14 +157,15 @@ for split in range(5):
                     os.path.
                     join(videos_dir, parts[0] + "." + parts[1].split("_")[0])
                 ):
-                    butterfly_name = parts[0][:3] + "_Butterfly_" + parts[0][
-                        4:] + ".avi"
-                    if not os.path.exists(
-                        os.path.join(videos_dir, butterfly_name)
-                    ):
-                        print("green dots in video or aibronch", file)
-                        continue
-                    uni.append(butterfly_name)
+                    pass
+                    # butterfly_name = parts[0][:3] + "_Butterfly_" + parts[0][
+                    #     4:] + ".avi"
+                    # if not os.path.exists(
+                    #     os.path.join(videos_dir, butterfly_name)
+                    # ):
+                    #     print("green dots in video or aibronch", file)
+                    #     continue
+                    # uni.append(butterfly_name)
                 else:
                     uni.append(parts[0] + "." + parts[1].split("_")[0])
             uni_files_in_split = np.unique(uni)
@@ -180,14 +182,15 @@ for split in range(5):
 with open(os.path.join("..", "data", "cross_val.json"), "w") as outfile:
     json.dump(video_cross_val, outfile)
 
-this_class = {"cov": "covid", "pne": "pneumonia", "reg": "regular"}
-for i in range(5):
-    all_labels = []
-    files, labs = video_cross_val[i]["test"]
-    for j in range(len(files)):
-        assert os.path.exists(
-            os.path.join(
-                OUTPUT_DIR, "split" + str(i), this_class[labs[j]],
-                files[j] + "_frame0.jpg"
-            )
-        ), files[j] + "  in  " + str(i)
+# this_class = {"cov": "covid", "pne": "pneumonia", "reg": "regular"}
+# this_class_LUS = {"cov": "abnormal", "pne": "abnormal", "pneu": "abnormal", "reg": "normal", "vir": "abnormal"}
+# for i in range(5):
+#     all_labels = []
+#     files, labs = video_cross_val[i]["test"]
+#     for j in range(len(files)):
+#         assert os.path.exists(
+#             os.path.join(
+#                 OUTPUT_DIR, "split" + str(i), this_class_LUS[labs[j]],
+#                 files[j] + "_frame0.jpg"
+#             )
+#         ), files[j] + "  in  " + str(i)

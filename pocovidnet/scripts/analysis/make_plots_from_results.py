@@ -7,9 +7,9 @@ import seaborn as sn
 import matplotlib.pyplot as plt
 import pickle
 
-OUT_DIR = "../results_oct/plots/new"
-IN_DIR = "../results_oct/"
-BEST_MODEL = "base_3.dat"
+OUT_DIR = "../results_oct_/plots/new"
+IN_DIR = "../"
+BEST_MODEL = "results_vgg_2023.dat"
 
 compare_model_list = [
     "base_3.dat", "cam_3.dat", "nasnet_3.dat", "encoding_3.dat",
@@ -49,19 +49,19 @@ def plot_confusion_matrix(data_confusion, labels, save_path):
     ax = fig.axes
     df_cm = pd.DataFrame(
         data_confusion,
-        index=[i for i in ["COVID-19", "Bact. Pneu.", "Healthy"]],
-        columns=[i for i in ["COVID-19", "Bact. Pneu.", "Healthy"]]
+        index=[i for i in ["abnormal", "normal"]],
+        columns=[i for i in ["abnormal", "normal"]]
     )
 
     sn.set(font_scale=1.8)
 
     plt.xticks(
-        np.arange(3) + 0.5, ("COVID-19", "Bact. Pneu.", "Normal"),
+        np.arange(3) + 0.5, ("abnormal", "normal"),
         fontsize="17",
         va="center"
     )
     plt.yticks(
-        np.arange(3) + 0.5, ("C", "P", "H"),
+        np.arange(3) + 0.5, ("A", "N"),
         rotation=0,
         fontsize="17",
         va="center"
@@ -185,13 +185,15 @@ with open(os.path.join(IN_DIR, BEST_MODEL), "rb") as outfile:
 
 data, max_points, scores, roc_auc_std = roc_auc(saved_logits, saved_gt)
 
-cols = ["red", "orange", "green"]
-classes = ["COVID-19", "Bacterial Pneu.", "Healthy"]
+# cols = ["red", "orange", "green"]
+# classes = ["COVID-19", "Bacterial Pneu.", "Healthy"]
+cols = ["red", "green"]
+classes = ["abnormal", "normal"]
 
 # ROC curve of best model
 plt.figure(figsize=(6, 5))
 plt.plot([0, 1], [0, 1], color='grey', lw=1.5, linestyle='--')
-for i in range(3):
+for i in range(2):
     roc_mean, roc_std, _, _ = data[i]
     lab = classes[i] + " (%.2f" % scores[i] + "$\pm$" + str(
         roc_auc_std[i]
@@ -272,9 +274,11 @@ plt.savefig(
 )
 
 # ------------------- ROC AUC ALL MODELS ------------------------------
-for CLASS in range(3):
-    cols = ["red", "orange", "green", "blue", "purple"]
-    classes = ["COVID-19", "Bacterial Pneu.", "Healthy"]
+for CLASS in range(2):
+    # cols = ["red", "orange", "green", "blue", "purple"]
+    # classes = ["COVID-19", "Bacterial Pneu.", "Healthy"]
+    cols = ["red", "green"]
+    classes = ["abnormal", "normal"]
     # roc_auc_scores = np.mean(np.asarray(scores), axis=0)
     fig = plt.figure(figsize=(6, 5))
     # plt.subplot(1,3,1)
@@ -403,7 +407,7 @@ data_confusion = all_cms.copy()
 for i in range(5):
     sums_axis = np.sum(data_confusion[i], axis=1)
     data_confusion[i] = np.array(
-        [data_confusion[i, j, :] / sums_axis[j] for j in range(3)]
+        [data_confusion[i, j, :] / sums_axis[j] for j in range(2)]
     )
 sens_stds = np.std(data_confusion, axis=0)
 data_confusion = np.mean(data_confusion, axis=0)

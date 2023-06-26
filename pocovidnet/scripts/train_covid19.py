@@ -1,4 +1,5 @@
 import argparse
+import csv
 import os
 
 import cv2
@@ -9,37 +10,37 @@ import tensorflow as tf
 from imutils import paths
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.preprocessing import LabelBinarizer
-from tensorflow.keras.callbacks import (
+from keras.callbacks import (
     EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 )
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.utils import to_categorical
+from keras.optimizers import Adam
+from keras.preprocessing.image import ImageDataGenerator
+from keras.utils import to_categorical
 
 from pocovidnet import MODEL_FACTORY
 from pocovidnet.utils import Metrics
 
 # Suppress logging
-tf.get_logger().setLevel('ERROR')
+# tf.get_logger().setLevel('ERROR')
 
 # Construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument(
     '-d', '--data_dir', required=True, help='path to input dataset'
 )
-ap.add_argument('-m', '--model_dir', type=str, default='models/')
+ap.add_argument('-m', '--model_dir', type=str, default='models_LUS/')
 ap.add_argument(
     '-f', '--fold', type=int, default='0', help='fold to take as test data'
 )
-ap.add_argument('-lr', '--learning_rate', type=float, default=1e-4)
-ap.add_argument('-ep', '--epochs', type=int, default=20)
+ap.add_argument('-lr', '--learning_rate', type=float, default=1e-3)
+ap.add_argument('-ep', '--epochs', type=int, default=15)
 ap.add_argument('-bs', '--batch_size', type=int, default=16)
 ap.add_argument('-t', '--trainable_base_layers', type=int, default=1)
 ap.add_argument('-iw', '--img_width', type=int, default=224)
 ap.add_argument('-ih', '--img_height', type=int, default=224)
-ap.add_argument('-id', '--model_id', type=str, default='vgg_base')
+ap.add_argument('-id', '--model_id', type=str, default='vgg_cam')
 ap.add_argument('-ls', '--log_softmax', type=bool, default=False)
-ap.add_argument('-n', '--model_name', type=str, default='test')
+ap.add_argument('-n', '--model_name', type=str, default='vgg_cam')
 ap.add_argument('-hs', '--hidden_size', type=int, default=64)
 args = vars(ap.parse_args())
 
@@ -47,7 +48,7 @@ args = vars(ap.parse_args())
 DATA_DIR = args['data_dir']
 MODEL_NAME = args['model_name']
 FOLD = args['fold']
-MODEL_DIR = os.path.join(args['model_dir'], MODEL_NAME, f'fold_{FOLD}')
+MODEL_DIR = os.path.join(args['model_dir'], 'trained_models_cam', f'fold_{FOLD}')
 LR = args['learning_rate']
 EPOCHS = args['epochs']
 BATCH_SIZE = args['batch_size']
@@ -77,16 +78,18 @@ print(f'selected fold: {FOLD}')
 
 train_labels, test_labels = [], []
 train_data, test_data = [], []
-# test_files = []
+test_files = []
 
 # loop over folds
 for imagePath in imagePaths:
-
     path_parts = imagePath.split(os.path.sep)
+
     # extract the split
     train_test = path_parts[-3][-1]
+
     # extract the class label from the filename
     label = path_parts[-2]
+
     # load the image, swap color channels, and resize it to be a fixed
     # 224x224 pixels while ignoring aspect ratio
     image = cv2.imread(imagePath)
@@ -97,7 +100,7 @@ for imagePath in imagePaths:
     if train_test == str(FOLD):
         test_labels.append(label)
         test_data.append(image)
-        # test_files.append(path_parts[-1])
+        test_files.append(path_parts[-1])
     else:
         train_labels.append(label)
         train_data.append(image)
@@ -159,40 +162,46 @@ model = MODEL_FACTORY[MODEL_ID](
 
 # Define callbacks
 earlyStopping = EarlyStopping(
-    monitor='val_loss',
+    monitor='loss',
     patience=20,
     verbose=1,
     mode='min',
-    restore_best_weights=True
+    restore_best_weights=True,
 )
 
 mcp_save = ModelCheckpoint(
     # os.path.join(MODEL_DIR, 'fold_' + str(FOLD) + '_epoch_{epoch:02d}'),
-    os.path.join(MODEL_DIR, 'best_weights'),
+    filepath=os.path.join(MODEL_DIR, 'model_checkpoint.h5'),
     save_best_only=True,
     monitor='val_accuracy',
     mode='max',
-    verbose=1
+    verbose=1,
+    save_freq='epoch',
+    load_weights_on_restart=True,
 )
 reduce_lr_loss = ReduceLROnPlateau(
-    monitor='val_loss',
+    monitor='accuracy',
     factor=0.7,
     patience=7,
     verbose=1,
-    epsilon=1e-4,
+    min_lr=1e-4,
     mode='min'
 )
 # To show balanced accuracy
 metrics = Metrics((testX, testY), model)
+with open(os.path.join(MODEL_DIR, "_test_file.csv"), 'w', newline='') as file:
+    writer = csv.writer(file)
+    for item in test_files:
+        writer.writerow([item])
 
 # compile model
 print('Compiling model...')
-opt = Adam(lr=LR, decay=LR / EPOCHS)
+opt = Adam(learning_rate=LR, decay=LR / EPOCHS)
 loss = (
     tf.keras.losses.CategoricalCrossentropy() if not LOG_SOFTMAX else (
-        lambda labels, targets: tf.reduce_mean(
+        lambda labels_, targets: tf.reduce_mean(
             tf.reduce_sum(
-                -1 * tf.math.multiply(tf.cast(labels, tf.float32), targets),
+                -1 * tf.math.multiply(tf.cast(labels_, tf.float32), targets),
                 axis=1
             )
         )
@@ -206,13 +215,15 @@ print(f'Model summary {model.summary()}')
 
 # train the head of the network
 print('Starting training model...')
-H = model.fit_generator(
+H = model.fit(
     trainAug.flow(trainX, trainY, batch_size=BATCH_SIZE),
     steps_per_epoch=len(trainX) // BATCH_SIZE,
-    validation_data=(testX, testY),
-    validation_steps=len(testX) // BATCH_SIZE,
+    # validation_data=(testX, testY),
+    # validation_steps=200, #len(testX) // BATCH_SIZE,
     epochs=EPOCHS,
-    callbacks=[earlyStopping, mcp_save, reduce_lr_loss, metrics]
+    callbacks=[earlyStopping, mcp_save, reduce_lr_loss
+        # , metrics
+               ]
 )
 
 # make predictions on the testing set
@@ -226,6 +237,7 @@ df.to_csv(os.path.join(MODEL_DIR, "_preds_last_epoch.csv"))
 # for each image in the testing set we need to find the index of the
 # label with corresponding largest predicted probability
 predIdxs = np.argmax(predIdxs, axis=1)
+df.to_csv(os.path.join(MODEL_DIR, "_preds_last_epoch_rend.csv"))
 
 print('classification report sklearn:')
 print(
@@ -234,7 +246,7 @@ print(
     )
 )
 
-# compute the confusion matrix and and use it to derive the raw
+# compute the confusion matrix and use it to derive the raw
 # accuracy, sensitivity, and specificity
 print('confusion matrix:')
 cm = confusion_matrix(testY.argmax(axis=1), predIdxs)
@@ -245,14 +257,26 @@ print(cm)
 N = EPOCHS
 plt.style.use('ggplot')
 plt.figure()
-plt.plot(np.arange(0, N), H.history['loss'], label='train_loss')
-plt.plot(np.arange(0, N), H.history['val_loss'], label='val_loss')
-plt.plot(np.arange(0, N), H.history['accuracy'], label='train_acc')
-plt.plot(np.arange(0, N), H.history['val_accuracy'], label='val_acc')
-plt.title('Training Loss and Accuracy on COVID-19 Dataset')
-plt.xlabel('Epoch #')
-plt.ylabel('Loss/Accuracy')
-plt.legend(loc='lower left')
-plt.savefig(os.path.join(MODEL_DIR, 'loss.png'))
+print("history")
+print(H.history)
+# plt.plot(np.arange(0, N), H.history['loss'], label='train_loss')
+# plt.plot(np.arange(0, N), H.history['val_loss'], label='val_loss')
+# plt.plot(np.arange(0, N), H.history['accuracy'], label='train_acc')
+# plt.plot(np.arange(0, N), H.history['val_accuracy'], label='val_acc')
+# plt.title('Training Loss and Accuracy on LUS Dataset')
+# plt.xlabel('Epoch #')
+# plt.ylabel('Loss/Accuracy')
+# plt.legend(loc='lower left')
+plt.plot(H.history["accuracy"])
+# plt.plot(H.history['val_loss'])
+plt.plot(H.history['loss'])
+# plt.plot(H.history['val_accuracy'])
+plt.title('Training Loss and Accuracy on LUS Dataset')
+plt.title("model accuracy")
+# plt.ylabel("Accuracy")
+plt.xlabel("Epoch")
+plt.legend(["Accuracy", "loss"])
+# plt.show()
+plt.savefig(os.path.join(MODEL_DIR, f'model_perf_fold_{FOLD}.png'))
 
-print('Done, shuttting down!')
+print('Done, shutting down!')
