@@ -1,9 +1,9 @@
 #POCOVID-Net model.
 import tensorflow as tf
-from tensorflow.keras.applications import (
+from keras.applications import (
     VGG16, MobileNetV2, NASNetMobile, ResNet50
 )
-from tensorflow.keras.layers import (
+from keras.layers import (
     AveragePooling2D,
     Dense,
     Dropout,
@@ -11,9 +11,10 @@ from tensorflow.keras.layers import (
     Input,
     BatchNormalization,
     ReLU,
-    LeakyReLU
+    LeakyReLU,
+    Activation
 )
-from tensorflow.keras.models import Model
+from keras.models import Model
 from pocovidnet.layers import global_average_pooling
 from .utils import fix_layers
 
@@ -36,7 +37,6 @@ def get_model(
         include_top=False,
         input_tensor=Input(shape=input_size)
     )
-    # construct the head of the model that will be placed on top of the
     # the base model
     headModel = baseModel.output
     headModel = AveragePooling2D(pool_size=(4, 4))(headModel)
@@ -79,7 +79,7 @@ def get_cam_model(
     Returns:
         tensorflow.keras.models object
     """
-    act_fn = tf.nn.softmax if not log_softmax else tf.nn.log_softmax
+    act_fn = tf.nn.relu if not log_softmax else tf.nn.log_softmax
 
     # load the VGG16 network, ensuring the head FC layer sets are left off
     baseModel = VGG16(
@@ -89,11 +89,10 @@ def get_cam_model(
     )
     headModel = baseModel.output
     headModel = global_average_pooling(headModel)
-    headModel = (
-        Dropout(dropout)(headModel, training=True)
-        if mc_dropout else Dropout(dropout)(headModel)
-    )
-    headModel = Dense(num_classes, activation=act_fn)(headModel)
+    headModel = Dropout(dropout)(headModel, training=True)
+    headModel = Dense(64, activation=act_fn)(headModel)
+    headModel = Dropout(dropout)(headModel, training=True)
+    headModel = Dense(2, activation='sigmoid')(headModel)
 
     model = Model(inputs=baseModel.input, outputs=headModel)
     model = fix_layers(model, num_flex_layers=trainable_layers + 2)
@@ -131,7 +130,7 @@ def get_mobilenet_v2_model(
         include_top=False,
         input_tensor=Input(shape=input_size)
     )
-    # construct the head of the model that will be placed on top of the
+    # construct the head of the model that will be placed on top of
     # the base model
     headModel = baseModel.output
     headModel = AveragePooling2D(pool_size=(4, 4))(headModel)
